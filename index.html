@@ -33,7 +33,6 @@
             transition: all 0.3s ease;
         }
 
-        /* CONTROLES FLOTANTES */
         .controls-container {
             position: fixed;
             top: 20px;
@@ -102,13 +101,12 @@
         h1 { text-align: center; margin-bottom: 20px; font-size: 1.5rem; }
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; }
         
-        /* CARDS DE SELECCIÓN CORREGIDAS */
         .card { 
             border: 1px solid var(--border); 
             border-radius: 10px; 
             padding: 14px; 
             background: var(--card-bg);
-            display: block; /* Asegura visibilidad */
+            display: block;
         }
         .card.error { border-color: #ef4444; background: rgba(239, 68, 68, 0.1); }
         .card b { display: block; margin-bottom: 12px; font-size: 1rem; color: var(--primary); min-height: 2.5em; }
@@ -126,7 +124,6 @@
         .btn-download { background: #059669; color: white; }
         .btn-back { background: #475569; color: white; margin-top: 10px; }
 
-        /* TABLA */
         #schedule-capture { background: var(--container-bg); padding: 10px; border-radius: 8px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; background: var(--bg); }
         th { background: var(--container-bg); color: var(--primary); font-size: 14px; padding: 10px 2px; text-transform: uppercase; font-weight: 900; border: 1px solid var(--border); }
@@ -224,10 +221,17 @@ cursosInfo.forEach((curso, index) => {
     const card = document.createElement("div");
     card.className = "card";
     card.id = `card-${index}`;
+    
+    // Definimos qué grupos mostrar por curso
+    let grupos = ['A', 'B', 'C', 'D'];
+    if (curso.n.includes("Metodología")) {
+        grupos.push('E'); // Añadimos la opción E solo aquí
+    }
+
     card.innerHTML = `
         <b>${curso.n}</b>
         <div class="radio-group">
-            ${['A','B','C','D'].map(g => `
+            ${grupos.map(g => `
                 <label>
                     <input type="radio" name="curso-${index}" value="${g}"> ${g}
                 </label>
@@ -275,32 +279,33 @@ function generarHorario() {
         });
     };
 
-    // LÓGICA DE ASIGNACIÓN POR GRUPOS (Mati/Tarde)
     for (let nombreCurso in seleccion) {
         const { grupo, color } = seleccion[nombreCurso];
-        const esMati = (grupo === "A" || grupo === "C");
         const n = nombreCurso.toLowerCase();
+        
+        // El Grupo E también cuenta como horario de Mañana (Mati)
+        const esMati = (grupo === "A" || grupo === "C" || grupo === "E");
 
         if (n.includes("taller")) {
-            const h = esMati ? ["08:50 - 09:40","09:40 - 10:30","10:40 - 11:30","11:30 - 12:20","12:20 - 13:10"] : ["15:50 - 16:40","16:40 - 17:30","17:40 - 18:30","18:30 - 19:20","19:20 - 20:10"];
+            const h = (grupo === "A" || grupo === "C") ? ["08:50 - 09:40","09:40 - 10:30","10:40 - 11:30","11:30 - 12:20","12:20 - 13:10"] : ["15:50 - 16:40","16:40 - 17:30","17:40 - 18:30","18:30 - 19:20","19:20 - 20:10"];
             asig("Lunes", h, nombreCurso, color, grupo); asig("Jueves", h, nombreCurso, color, grupo);
         } else if (n.includes("representación")) {
-            const h = esMati ? ["07:00 - 07:50","07:50 - 08:40","08:50 - 09:40","09:40 - 10:30"] : ["14:00 - 14:50","14:50 - 15:40","15:50 - 16:40","16:40 - 17:30"];
+            const h = (grupo === "A" || grupo === "C") ? ["07:00 - 07:50","07:50 - 08:40","08:50 - 09:40","09:40 - 10:30"] : ["14:00 - 14:50","14:50 - 15:40","15:50 - 16:40","16:40 - 17:30"];
             asig("Martes", h, nombreCurso, color, grupo);
         } else if (n.includes("historia")) {
-            const h = esMati ? ["10:40 - 11:30","11:30 - 12:20","12:20 - 13:10","13:10 - 14:00"] : ["17:40 - 18:30","18:30 - 19:20","19:20 - 20:10","20:10 - 21:00"];
+            const h = (grupo === "A" || grupo === "C") ? ["10:40 - 11:30","11:30 - 12:20","12:20 - 13:10","13:10 - 14:00"] : ["17:40 - 18:30","18:30 - 19:20","19:20 - 20:10","20:10 - 21:00"];
             asig("Viernes", h, nombreCurso, color, grupo);
         } else if (n.includes("apreciación")) {
-            const h = esMati ? ["10:40 - 11:30","11:30 - 12:20","12:20 - 13:10","13:10 - 14:00"] : ["17:40 - 18:30","18:30 - 19:20","19:20 - 20:10","20:10 - 21:00"];
+            const h = (grupo === "A" || grupo === "C") ? ["10:40 - 11:30","11:30 - 12:20","12:20 - 13:10","13:10 - 14:00"] : ["17:40 - 18:30","18:30 - 19:20","19:20 - 20:10","20:10 - 21:00"];
             asig("Miércoles", h, nombreCurso, color, grupo);
         } else if (n.includes("metodología")) {
             const h = esMati ? ["08:50 - 09:40","09:40 - 10:30"] : ["15:50 - 16:40","16:40 - 17:30"];
             asig("Miércoles", h, nombreCurso, color, grupo); asig("Viernes", h, nombreCurso, color, grupo);
         } else if (n.includes("fotografía")) {
-            const h = esMati ? ["07:00 - 07:50","07:50 - 08:40"] : ["14:00 - 14:50","14:50 - 15:40"];
+            const h = (grupo === "A" || grupo === "C") ? ["07:00 - 07:50","07:50 - 08:40"] : ["14:00 - 14:50","14:50 - 15:40"];
             asig("Miércoles", h, nombreCurso, color, grupo); asig("Viernes", h, nombreCurso, color, grupo);
         } else if (n.includes("inglés")) {
-            const h = esMati ? ["10:40 - 11:30","11:30 - 12:20","12:20 - 13:10"] : ["17:40 - 18:30","18:30 - 19:20","19:20 - 20:10"];
+            const h = (grupo === "A" || grupo === "C") ? ["10:40 - 11:30","11:30 - 12:20","12:20 - 13:10"] : ["17:40 - 18:30","18:30 - 19:20","19:20 - 20:10"];
             asig("Martes", h, nombreCurso, color, grupo);
         }
     }
