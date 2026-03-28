@@ -1,0 +1,370 @@
+<html lang="es" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>Mi Horario 2026</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --container-bg: #1e293b;
+            --primary: #3b82f6;
+            --text-main: #f1f5f9;
+            --text-dim: #94a3b8;
+            --border: #334155;
+            --card-bg: #0f172a66;
+        }
+
+        [data-theme="light"] {
+            --bg: #f8fafc;
+            --container-bg: #ffffff;
+            --primary: #2563eb;
+            --text-main: #1e293b;
+            --text-dim: #64748b;
+            --border: #e2e8f0;
+            --card-bg: #f1f5f9;
+        }
+        
+        body { 
+            font-family: 'Times New Roman', sans-serif; 
+            background: var(--bg); 
+            color: var(--text-main); 
+            padding: 15px; 
+            margin: 0;
+            transition: all 0.3s ease;
+        }
+
+        /* CONTROLES FLOTANTES */
+        .controls-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: var(--container-bg);
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .switch-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: var(--text-dim);
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 34px;
+            height: 18px;
+        }
+
+        .switch input { opacity: 0; width: 0; height: 0; }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #475569;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 12px; width: 12px;
+            left: 3px; bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider { background-color: var(--primary); }
+        input:checked + .slider:before { transform: translateX(16px); }
+
+        .container { 
+            max-width: 1100px; 
+            margin: 20px auto; 
+            background: var(--container-bg); 
+            padding: 20px; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4); 
+        }
+
+        h1 { text-align: center; margin-bottom: 20px; font-size: 1.5rem; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; }
+        
+        /* CARDS DE SELECCIÓN CORREGIDAS */
+        .card { 
+            border: 1px solid var(--border); 
+            border-radius: 10px; 
+            padding: 14px; 
+            background: var(--card-bg);
+            display: block; /* Asegura visibilidad */
+        }
+        .card.error { border-color: #ef4444; background: rgba(239, 68, 68, 0.1); }
+        .card b { display: block; margin-bottom: 12px; font-size: 1rem; color: var(--primary); min-height: 2.5em; }
+        
+        .radio-group { display: flex; gap: 10px; flex-wrap: wrap; }
+        .radio-group label { cursor: pointer; background: var(--border); padding: 5px 10px; border-radius: 5px; transition: 0.2s; }
+        .radio-group label:hover { background: var(--primary); color: white; }
+
+        button { 
+            margin-top: 15px; padding: 12px; width: 100%; border: none; 
+            border-radius: 10px; cursor: pointer; font-weight: bold; 
+            font-size: 1rem; 
+        }
+        .btn-main { background: var(--primary); color: white; }
+        .btn-download { background: #059669; color: white; }
+        .btn-back { background: #475569; color: white; margin-top: 10px; }
+
+        /* TABLA */
+        #schedule-capture { background: var(--container-bg); padding: 10px; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; background: var(--bg); }
+        th { background: var(--container-bg); color: var(--primary); font-size: 14px; padding: 10px 2px; text-transform: uppercase; font-weight: 900; border: 1px solid var(--border); }
+        td { border: 1px solid var(--border); text-align: center; height: 45px; padding: 2px; } 
+        
+        .hora-col { 
+            width: 110px; 
+            background: var(--container-bg); 
+            color: var(--text-main); 
+            font-size: 15px; 
+            font-weight: 900 !important; 
+        }
+
+        .course-block {
+            height: 100%; width: 100%; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            font-size: 18px; font-weight: 800; color: #ffffff; padding: 4px; box-sizing: border-box; 
+            line-height: 1; text-shadow: 1px 1px 3px rgba(0,0,0,0.9);
+        }
+
+        .group-letter { font-size: 28px; margin-top: 2px; display: block; font-weight: 900; }
+        .DESCANSO { background: var(--bg); font-size: 10px; color: var(--text-dim); opacity: 0.4; }
+    </style>
+</head>
+<body>
+
+<div class="controls-container">
+    <div class="switch-wrapper">
+        <span>MODO CLARO</span>
+        <label class="switch">
+            <input type="checkbox" id="themeSwitch" onclick="toggleTheme()">
+            <span class="slider"></span>
+        </label>
+    </div>
+    <div class="switch-wrapper">
+        <span>MOSTRAR GRUPOS</span>
+        <label class="switch">
+            <input type="checkbox" id="groupSwitch" checked>
+            <span class="slider"></span>
+        </label>
+    </div>
+</div>
+
+<div class="container" id="selection-screen">
+    <h1>Configura tu Horario 2026</h1>
+    <div class="grid" id="cursosGrid"></div>
+    <button id="btnGenerar" class="btn-main">Generar Mi Horario 2026</button>
+</div>
+
+<div class="container" id="schedule-screen" style="display:none;">
+    <div id="schedule-capture">
+        <h1 style="margin-top:0;">Mi Horario 2026</h1>
+        <div style="overflow-x:auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="hora-col">Hora</th>
+                        <th>Lunes</th><th>Martes</th><th>Miércoles</th><th>Jueves</th><th>Viernes</th>
+                    </tr>
+                </thead>
+                <tbody id="bodyTable"></tbody>
+            </table>
+        </div>
+    </div>
+    <button onclick="descargarImagen()" class="btn-download">📥 Descargar Horario (PNG)</button>
+    <button onclick="location.reload()" class="btn-back">⬅️ Atrás / Editar</button>
+</div>
+
+<script>
+const cursosInfo = [
+    { n: "Taller de diseño arquitectónico 1", color: "#31184c" },
+    { n: "Representación arquitectónica 1", color: "#29612d" },
+    { n: "Introducción a la Teoría e Historia de la arquitectura", color: "#6d212b" },
+    { n: "Apreciación del arte universal", color: "#422b16" },
+    { n: "Metodología del trabajo académico", color: "#9f4514" },
+    { n: "Fotografía y cine", color: "#615e4b" },
+    { n: "Inglés", color: "#153657" }
+];
+
+const hours = [
+    "07:00 - 07:50", "07:50 - 08:40", "DESCANSO",
+    "08:50 - 09:40", "09:40 - 10:30", "DESCANSO",
+    "10:40 - 11:30", "11:30 - 12:20", "12:20 - 13:10", "13:10 - 14:00",
+    "DESCANSO",
+    "14:00 - 14:50", "14:50 - 15:40", "DESCANSO",
+    "15:50 - 16:40", "16:40 - 17:30", "DESCANSO",
+    "17:40 - 18:30", "18:30 - 19:20", "19:20 - 20:10", "20:10 - 21:00"
+];
+
+const days = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
+
+// RENDERIZADO DE LA SELECCIÓN
+const cursosGrid = document.getElementById("cursosGrid");
+cursosInfo.forEach((curso, index) => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.id = `card-${index}`;
+    card.innerHTML = `
+        <b>${curso.n}</b>
+        <div class="radio-group">
+            ${['A','B','C','D'].map(g => `
+                <label>
+                    <input type="radio" name="curso-${index}" value="${g}"> ${g}
+                </label>
+            `).join('')}
+        </div>
+    `;
+    cursosGrid.appendChild(card);
+});
+
+function toggleTheme() {
+    const isChecked = document.getElementById('themeSwitch').checked;
+    document.documentElement.setAttribute('data-theme', isChecked ? 'light' : 'dark');
+}
+
+function generarHorario() {
+    let seleccion = {};
+    let incompleto = false;
+
+    cursosInfo.forEach((c, i) => {
+        const input = document.querySelector(`input[name="curso-${i}"]:checked`);
+        const card = document.getElementById(`card-${i}`);
+        if (input) {
+            seleccion[c.n] = { grupo: input.value, color: c.color };
+            card.classList.remove('error');
+        } else {
+            incompleto = true;
+            card.classList.add('error');
+        }
+    });
+
+    if (incompleto) {
+        alert("⚠️ Por favor, selecciona un grupo para cada curso.");
+        return;
+    }
+
+    const scheduleData = {};
+    hours.forEach(h => { 
+        scheduleData[h] = {}; 
+        days.forEach(d => scheduleData[h][d] = null); 
+    });
+
+    const asig = (dia, listaH, curso, color, grupo) => {
+        listaH.forEach(h => { 
+            if(scheduleData[h]) scheduleData[h][dia] = { nombre: curso, color: color, grupo: grupo }; 
+        });
+    };
+
+    // LÓGICA DE ASIGNACIÓN POR GRUPOS (Mati/Tarde)
+    for (let nombreCurso in seleccion) {
+        const { grupo, color } = seleccion[nombreCurso];
+        const esMati = (grupo === "A" || grupo === "C");
+        const n = nombreCurso.toLowerCase();
+
+        if (n.includes("taller")) {
+            const h = esMati ? ["08:50 - 09:40","09:40 - 10:30","10:40 - 11:30","11:30 - 12:20","12:20 - 13:10"] : ["15:50 - 16:40","16:40 - 17:30","17:40 - 18:30","18:30 - 19:20","19:20 - 20:10"];
+            asig("Lunes", h, nombreCurso, color, grupo); asig("Jueves", h, nombreCurso, color, grupo);
+        } else if (n.includes("representación")) {
+            const h = esMati ? ["07:00 - 07:50","07:50 - 08:40","08:50 - 09:40","09:40 - 10:30"] : ["14:00 - 14:50","14:50 - 15:40","15:50 - 16:40","16:40 - 17:30"];
+            asig("Martes", h, nombreCurso, color, grupo);
+        } else if (n.includes("historia")) {
+            const h = esMati ? ["10:40 - 11:30","11:30 - 12:20","12:20 - 13:10","13:10 - 14:00"] : ["17:40 - 18:30","18:30 - 19:20","19:20 - 20:10","20:10 - 21:00"];
+            asig("Viernes", h, nombreCurso, color, grupo);
+        } else if (n.includes("apreciación")) {
+            const h = esMati ? ["10:40 - 11:30","11:30 - 12:20","12:20 - 13:10","13:10 - 14:00"] : ["17:40 - 18:30","18:30 - 19:20","19:20 - 20:10","20:10 - 21:00"];
+            asig("Miércoles", h, nombreCurso, color, grupo);
+        } else if (n.includes("metodología")) {
+            const h = esMati ? ["08:50 - 09:40","09:40 - 10:30"] : ["15:50 - 16:40","16:40 - 17:30"];
+            asig("Miércoles", h, nombreCurso, color, grupo); asig("Viernes", h, nombreCurso, color, grupo);
+        } else if (n.includes("fotografía")) {
+            const h = esMati ? ["07:00 - 07:50","07:50 - 08:40"] : ["14:00 - 14:50","14:50 - 15:40"];
+            asig("Miércoles", h, nombreCurso, color, grupo); asig("Viernes", h, nombreCurso, color, grupo);
+        } else if (n.includes("inglés")) {
+            const h = esMati ? ["10:40 - 11:30","11:30 - 12:20","12:20 - 13:10"] : ["17:40 - 18:30","18:30 - 19:20","19:20 - 20:10"];
+            asig("Martes", h, nombreCurso, color, grupo);
+        }
+    }
+
+    renderFinalTable(scheduleData);
+    document.getElementById("selection-screen").style.display = "none";
+    document.getElementById("schedule-screen").style.display = "block";
+}
+
+function renderFinalTable(data) {
+    const body = document.getElementById("bodyTable");
+    const showGroups = document.getElementById("groupSwitch").checked;
+    body.innerHTML = "";
+    let skipMap = {}; 
+
+    hours.forEach((h, hIdx) => {
+        let tr = document.createElement("tr");
+        let tdTime = document.createElement("td");
+        tdTime.className = "hora-col";
+        tdTime.innerText = h;
+        tr.appendChild(tdTime);
+
+        if (h === "DESCANSO") {
+            days.forEach(() => {
+                let td = document.createElement("td");
+                td.className = "DESCANSO"; td.innerText = "--";
+                tr.appendChild(td);
+            });
+        } else {
+            days.forEach(d => {
+                const key = `${d}-${hIdx}`;
+                if (skipMap[key]) return;
+                let td = document.createElement("td");
+                let cell = data[h][d];
+                if (cell) {
+                    let rowspan = 1;
+                    for (let i = hIdx + 1; i < hours.length; i++) {
+                        if (hours[i] !== "DESCANSO" && data[hours[i]][d] && data[hours[i]][d].nombre === cell.nombre) {
+                            rowspan++;
+                            skipMap[`${d}-${i}`] = true;
+                        } else { break; }
+                    }
+                    if (rowspan > 1) td.rowSpan = rowspan;
+                    td.style.backgroundColor = cell.color;
+                    const groupHtml = showGroups ? `<span class="group-letter">${cell.grupo}</span>` : "";
+                    td.innerHTML = `<div class="course-block"><span>${cell.nombre}</span>${groupHtml}</div>`;
+                }
+                tr.appendChild(td);
+            });
+        }
+        body.appendChild(tr);
+    });
+}
+
+function descargarImagen() {
+    const target = document.getElementById("schedule-capture");
+    html2canvas(target, { scale: 2 }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'Horario_2026.png';
+        link.href = canvas.toDataURL();
+        link.click();
+    });
+}
+
+document.getElementById("btnGenerar").addEventListener("click", generarHorario);
+</script>
+</body>
